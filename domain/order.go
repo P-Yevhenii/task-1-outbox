@@ -40,21 +40,16 @@ func (ct *ChangeTracker) Changes() map[string]any {
 }
 
 // Order aggregate for the order bounded context.
-//
-// This enforces business invariants: you cannot set status = "completed"
-// without going through Complete(), which validates the transition.
 type Order struct {
 	id          OrderID
 	customerID  CustomerID
-	totalAmount int64 // cents
+	totalAmount int64
 	status      OrderStatus
 	completedAt *time.Time
 
-	// Changes tracks mutated fields for targeted DB updates.
 	Changes ChangeTracker
 
 	// Events collects domain events raised during this operation.
-	// Infrastructure reads this to write outbox entries.
 	Events EventRaiser
 }
 
@@ -86,12 +81,6 @@ func Reconstruct(
 	}
 }
 
-func (o *Order) ID() OrderID             { return o.id }
-func (o *Order) CustomerID() CustomerID  { return o.customerID }
-func (o *Order) TotalAmount() int64      { return o.totalAmount }
-func (o *Order) Status() OrderStatus     { return o.status }
-func (o *Order) CompletedAt() *time.Time { return o.completedAt }
-
 // Complete transitions the order to the completed state.
 func (o *Order) Complete(now time.Time) error {
 	if o.status == StatusCompleted {
@@ -116,3 +105,9 @@ func (o *Order) Complete(now time.Time) error {
 
 	return nil
 }
+
+func (o *Order) ID() OrderID             { return o.id }
+func (o *Order) CustomerID() CustomerID  { return o.customerID }
+func (o *Order) TotalAmount() int64      { return o.totalAmount }
+func (o *Order) Status() OrderStatus     { return o.status }
+func (o *Order) CompletedAt() *time.Time { return o.completedAt }
