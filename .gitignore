@@ -1,0 +1,15 @@
+# --- Go Specific ---
+*.out
+*.prof
+*.test
+
+coverage.txt
+
+# --- GoLand (JetBrains) Specific ---
+.idea/
+*.iml
+*.iws
+
+# --- Environment & Secrets ---
+.env
+.env.local
