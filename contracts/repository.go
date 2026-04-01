@@ -2,7 +2,6 @@ package contracts
 
 import (
 	"context"
-	"database/sql"
 	"github.com/P-Yevhenii/task-1-outbox/domain"
 )
 
@@ -38,20 +37,7 @@ func (p *Plan) Add(muts ...*Mutation) {
 	p.mutations = append(p.mutations, muts...)
 }
 
-// Execute runs all mutations in a single transaction.
-// If any mutation fails the entire transaction is rolled back.
-func (p *Plan) Execute(ctx context.Context, db *sql.DB) error {
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback() //nolint:errcheck // rollback on non-committed tx is safe
-
-	for _, mut := range p.mutations {
-		if _, err := tx.ExecContext(ctx, mut.Query, mut.Args...); err != nil {
-			return err
-		}
-	}
-
-	return tx.Commit()
+// Mutations returns the ordered list of mutations for use by the Committer.
+func (p *Plan) Mutations() []*Mutation {
+	return p.mutations
 }

@@ -75,8 +75,22 @@ func main() {
 // dbCommitter adapts contracts.Plan to the complete_order.Committer interface.
 type dbCommitter struct{ db *sql.DB }
 
+// Execute runs all mutations in a single transaction.
+// If any mutation fails the entire transaction is rolled back.
 func (c *dbCommitter) Execute(ctx context.Context, plan *contracts.Plan) error {
-	return plan.Execute(ctx, c.db)
+	tx, err := c.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck // rollback on non-committed tx is safe
+
+	for _, mut := range plan.Mutations() {
+		if _, err := tx.ExecContext(ctx, mut.Query, mut.Args...); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 // realClock returns the current wall-clock time.
